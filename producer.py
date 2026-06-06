@@ -4,13 +4,15 @@ from datetime import datetime
 from datetime import timezone
 import time
 import logging
+import queue
 
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-def producer(queue, ticker):
+
+def producer(queue: queue.Queue, ticker: str) -> None:
     try:
         dat = yf.Ticker(ticker)
         price = dat.fast_info.get('lastPrice', 'N/A')

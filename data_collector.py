@@ -14,13 +14,20 @@ from producer import producer
 from consumer import consumer
 import queue
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+
 ticker_list = ['AAPL', 'TSLA', 'MSFT', 'NVDA']
+try:
+    message_queue = queue.Queue()
 
-message_queue = queue.Queue()
-
-
-for ticker in ticker_list:
-    producer(message_queue, ticker)
-while not message_queue.empty():
-    consumer(message_queue)
-message_queue.join()
+    for ticker in ticker_list:
+        producer(message_queue, ticker)
+    while not message_queue.empty():
+        consumer(message_queue)
+except Exception as e:
+    logging.error(f"An error occurred: {e}")
