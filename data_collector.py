@@ -1,22 +1,26 @@
 #*
-# 1 Запрашивает данные: Скрипт должен делать HTTP-запрос к бесплатному API и получать текущие котировки акций. Рекомендация: Чтобы не мучиться с ключами API на первом получасе, используйте библиотеку yfinance (это обертка над Yahoo Finance) или сделайте запрос к любому открытому публичному API (например, котировки криптовалют от CoinGecko или Binance, они не требуют регистрации). Если хотите строго акции США, возьмите yfinance
-# 2 Форматирует данные: Вытащите из ответа API: 
-# название тикера (['AAPL', 'TSLA', 'MSFT', 'NVDA'])
-# текущую цену, 
-# валюту и 
-# точное время (timestamp).
-# 3 Сохраняет локально: Скрипт должен записать эти данные на ваш жесткий диск в обычный CSV-файл. Если файл уже существует, скрипт должен дописать (append) новую строку в конец файла, а не перезаписывать его.*#
-
-import yfinance as yf
-from datetime import datetime
-from datetime import timezone
-
+# Задача №2 Требование Переделай проект так, чтобы данные НЕ писались в CSV напрямую. Вместо этого сделай две программы. producer.py Получает котировки из Yahoo Finance. Формирует сообщение: { "ticker": "AAPL", "price": 212.5, "currency": "USD", "timestamp": "2025-08-13T15:30:00Z" } Пока НЕ используй Kafka. Просто складывай сообщения в список. Например: messages = [] messages.append(...) consumer.py Берет сообщения из этого списка и пишет их в CSV. Зачем это нужно Ты сейчас вручную разделишь систему на: Producer ↓ Queue ↓ Consumer Это фундамент Kafka.
+#  Ограничение Представь, что producer работает отдельно: python producer.py а consumer отдельно: python consumer.py И тут ты обнаружишь проблему. 
+# Список в памяти одного процесса недоступен другому процессу.
+# То есть: messages = [] не может быть общей очередью. Вот тогда появится Kafka И ты поймешь: Мне нужен внешний брокер сообщений. Тогда мы поставим: Docker Kafka Zookeeper и заменим: messages.append() на producer.send() 
+# Что нужно изучить для Задачи №2 Гуглить: 
+# producer consumer 
+# pattern queue data structure 
+# python separation of concerns 
+# python json module 
+#  У тебя должно появиться: project/ │ ├── producer.py ├── consumer.py ├── stock_data.csv producer.py выдает сообщения такого вида: { "ticker": "AAPL", "price": 212.5, "currency": "USD", "timestamp": "..." } consumer.py умеет принимать такие сообщения и писать их в CSV. Пока можно запускать их в одном файле для демонстрации: messages = producer() consumer(messages) Но producer и consumer должны быть разными сущностями.
+# *#
+from producer import producer
+from consumer import consumer
+import queue
 
 ticker_list = ['AAPL', 'TSLA', 'MSFT', 'NVDA']
 
-with open('stock_data.csv', 'a') as file:
-    for i in ticker_list:
-        dat = yf.Ticker(i)
-        info = dat.info
-        timeStampPC = datetime.now(timezone.utc).isoformat()
-        file.write(f"{i},{info['currentPrice']},{info['currency']},{timeStampPC}\n")
+message_queue = queue.Queue()
+
+
+for ticker in ticker_list:
+    producer(message_queue, ticker)
+while not message_queue.empty():
+    consumer(message_queue)
+message_queue.join()
