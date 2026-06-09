@@ -22,5 +22,5 @@ except KeyboardInterrupt:
 except Exception as e:
     logging.error(f"An error occurred while consuming messages: {e}")
 finally:
-    if consumer:
+    if consumer: 
         consumer.close()
