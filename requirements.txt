@@ -3,7 +3,9 @@ certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
 curl_cffi==0.15.0
+dotenv==0.9.9
 idna==3.18
+kafka-python==2.3.2
 markdown-it-py==4.2.0
 mdurl==0.1.2
 multitasking==0.0.13
@@ -12,9 +14,12 @@ pandas==3.0.3
 peewee==4.0.6
 platformdirs==4.10.0
 protobuf==7.35.0
+py4j==0.10.9.7
 pycparser==3.0
 Pygments==2.20.0
+pyspark==4.1.2
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
 pytz==2026.2
 requests==2.34.2
 rich==15.0.0
